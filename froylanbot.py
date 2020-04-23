@@ -1,4 +1,5 @@
-# -*- coding: UTF8 -*-
+''' Module to define telegram Bot related classes and functions '''
+
 from urllib import parse
 import requests
 import datetime
@@ -90,37 +91,28 @@ def main():
                     magnito_bot.send_message(chat_id, output_text)
 
             if not rocket_finished:
-                repkboard=True
                 if input_text.lower() == 'yes':
                     vid.remove('gte')
                 elif input_text.lower() == 'no':
                     vid.remove('lt')
 
-                print(vid.bisect_endpoints)
-                print(vid.bisect_frame())
                 if input_text.lower() == 'exit':
                     rocket_finished = True
                     output_photo = None
                     output_text = 'Exiting Rocket'
-                    repkboard = False
-                    magnito_bot.send_message(chat_id, output_text, repkboard=repkboard)
+                    magnito_bot.send_message(chat_id, output_text)
                 elif vid.can_bisect():
                     output_text = '{} Did the rocket launch yet?'
                     output_photo = vid.get_frame(vid.bisect_frame())
                     output_text = output_text.format(vid.bisect_frame())
                     magnito_bot.send_photo(chat_id, output_photo)
-                    magnito_bot.send_message(chat_id, output_text, repkboard=repkboard)
+                    magnito_bot.send_message(chat_id, output_text, repkboard=True)
                 else:
                     rocket_finished = True
                     output_photo = vid.get_frame(vid.bisect_frame())
                     output_text = 'Finished!!! the launching frame is {}'.format(vid.bisect_frame())
-                    repkboard = False
                     magnito_bot.send_photo(chat_id, output_photo)
-                    magnito_bot.send_message(chat_id, output_text, repkboard=repkboard)
-
-#                if output_photo:
-#                    magnito_bot.send_photo(chat_id, output_photo)
-#                magnito_bot.send_message(chat_id, output_text, repkboard=repkboard)
+                    magnito_bot.send_message(chat_id, output_text)
 
             new_offset = update_id + 1
 

@@ -1,3 +1,5 @@
+''' Module to manage the Video object'''
+
 from urllib import request
 import json
 import statistics
@@ -39,16 +41,11 @@ class Video:
 def main():
     vid = Video(BASE_URL)
     counter = 0
-#    answers = 'nynyynyyynyynnny'
-    answers = 'nnnnnnnnnnnnnnnnnnnn'
 
     while vid.can_bisect():
-        print(vid.bisect_endpoints)
         index = vid.bisect_frame()
-        print(index)
-#        answer = input('Did the rocket launch yet?   (Y/n)')
-        answer = answers[counter]
-        print(answer)
+        question = '{}  Did the rocket launch yet?   (Y/n)'.format(index)
+        answer = input(question)
         if answer.lower() in ['', 'y']:
             vid.remove('gte')
             counter += 1
