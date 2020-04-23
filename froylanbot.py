@@ -24,8 +24,19 @@ class BotHandler:
         result_json = resp.json()['result']
         return result_json
 
-    def send_message(self, chat_id, text):
+    def send_message(self, chat_id, text, repkboard=False):
         params = {'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML'}
+        if repkboard:
+            keyboard_buttons = ['Yes', 'No', 'Exit']
+            keyboard_buttons = [{'text': x} for x in keyboard_buttons]
+            ReplyKeyboardMarkup = {'keyboard': [keyboard_buttons],
+                                   'resize_keyboard': True}
+            params['reply_markup'] = json.dumps(ReplyKeyboardMarkup)
+        else:
+            ReplyKeyboardRemove = {'remove_keyboard': True}
+            params['reply_markup'] = json.dumps(ReplyKeyboardRemove)
+
+
         method = 'sendMessage'
         resp = requests.post(self.api_url + method, params)
         return resp
@@ -79,48 +90,37 @@ def main():
                     magnito_bot.send_message(chat_id, output_text)
 
             if not rocket_finished:
-                txt = 'endpoints: {}\n\
-                       to_bisect: {}\n\
-                       {} Did the rocket launch yet?   (Y/n)'
-                if not vid.to_bisect():
+                repkboard=True
+                if input_text.lower() == 'yes':
+                    vid.remove('gte')
+                elif input_text.lower() == 'no':
+                    vid.remove('lt')
+
+                print(vid.bisect_endpoints)
+                print(vid.bisect_frame())
+                if input_text.lower() == 'exit':
                     rocket_finished = True
-                    output_text = 'Finished!!!'
-
-                elif input_text == '/rocket':
-                    index = vid.bisect_frame()
-                    output_photo = vid.get_frame(index)
-                    output_text = txt.format(str(vid.bisect_endpoints),
-                                             str(vid.to_bisect()),
-                                             str(index)
-                                             )
-
-                elif input_text.lower() == 'y':
-                    vid.bisect('below')
-                    index = vid.bisect_frame()
-                    output_photo = vid.get_frame(index)
-                    output_text = txt.format(str(vid.bisect_endpoints),
-                                             str(vid.to_bisect()),
-                                             str(index)
-                                             )
-
-                elif input_text.lower() == 'n':
-                    vid.bisect('above')
-                    index = vid.bisect_frame()
-                    output_photo = vid.get_frame(index)
-                    output_text = txt.format(str(vid.bisect_endpoints),
-                                             str(vid.to_bisect()),
-                                             str(index)
-                                             )
-
-                else:
-                    output_text = 'That is not a valid answer'
-
-                try:
+                    output_photo = None
+                    output_text = 'Exiting Rocket'
+                    repkboard = False
+                    magnito_bot.send_message(chat_id, output_text, repkboard=repkboard)
+                elif vid.can_bisect():
+                    output_text = '{} Did the rocket launch yet?'
+                    output_photo = vid.get_frame(vid.bisect_frame())
+                    output_text = output_text.format(vid.bisect_frame())
                     magnito_bot.send_photo(chat_id, output_photo)
-                    magnito_bot.send_message(chat_id, output_text)
-                except:
-                    magnito_bot.send_message(chat_id, output_text)
+                    magnito_bot.send_message(chat_id, output_text, repkboard=repkboard)
+                else:
+                    rocket_finished = True
+                    output_photo = vid.get_frame(vid.bisect_frame())
+                    output_text = 'Finished!!! the launching frame is {}'.format(vid.bisect_frame())
+                    repkboard = False
+                    magnito_bot.send_photo(chat_id, output_photo)
+                    magnito_bot.send_message(chat_id, output_text, repkboard=repkboard)
 
+#                if output_photo:
+#                    magnito_bot.send_photo(chat_id, output_photo)
+#                magnito_bot.send_message(chat_id, output_text, repkboard=repkboard)
 
             new_offset = update_id + 1
 

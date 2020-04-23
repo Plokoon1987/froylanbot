@@ -8,7 +8,7 @@ class Video:
     def __init__(self, base_url):
         self.base_url = base_url
         self.response_dict = self.get_video_dict()
-        self.bisect_endpoints = [0, self.response_dict['frames']]
+        self.bisect_endpoints = [0, self.response_dict['frames'] - 1]
 
     def get_video_dict(self):
         response = request.urlopen(self.base_url)
@@ -22,32 +22,25 @@ class Video:
         return '{}/frame/{}'.format(self.base_url, index)
 
     def bisect_frame(self):
-        if self.bisect_endpoints[1] - self.bisect_endpoints[0] <= 1: 
+        if self.bisect_endpoints[1] - self.bisect_endpoints[0] <= 1:
             # endpoint[1] is never returned until the very end
             return self.bisect_endpoints[1]
         return round(statistics.mean(self.bisect_endpoints))
 
-    def remove_gte(self):
-        # Removes any value >= bisect_frame()
-        self.bisect_endpoints[1] = self.bisect_frame() - 1
-
-    def remove_lt(self):
-        # Removes any value < bisect_frame()
-        self.bisect_endpoints[0] = self.bisect_frame()
-
-    def bisect(self, answer):
-        if answer == 'remove_gte':
-            self.remove_gte()
-        elif answer == 'remove_lt':
-            self.remove_lt()
-
-
+    def remove(self, answer):
+        if answer == 'gte':
+            # Removes any value >= bisect_frame()
+            self.bisect_endpoints[1] = self.bisect_frame() - 1
+        elif answer == 'lt':
+            # Removes any value < bisect_frame()
+            self.bisect_endpoints[0] = self.bisect_frame()
 
 
 def main():
     vid = Video(BASE_URL)
     counter = 0
-    answers = 'nynyynyyynyynnny'
+#    answers = 'nynyynyyynyynnny'
+    answers = 'nnnnnnnnnnnnnnnnnnnn'
 
     while vid.can_bisect():
         print(vid.bisect_endpoints)
@@ -55,11 +48,12 @@ def main():
         print(index)
 #        answer = input('Did the rocket launch yet?   (Y/n)')
         answer = answers[counter]
+        print(answer)
         if answer.lower() in ['', 'y']:
-            vid.bisect('remove_gte')
+            vid.remove('gte')
             counter += 1
         elif answer.lower() == 'n':
-            vid.bisect('remove_lt')
+            vid.remove('lt')
             counter += 1
         else:
             print('That is not a valid answer')
