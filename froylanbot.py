@@ -1,59 +1,64 @@
-''' Module to define telegram Bot related classes and functions '''
+"""Module to define telegram Bot related classes and functions."""
 
-from urllib import parse
-import requests
-import datetime
+import sys
 import json
+import requests
 from framex_dev import Video
 
-BASE_URL = 'https://framex-dev.wadrid.net/api/video/Falcon%20Heavy%20Test%20Flight%20(Hosted%20Webcast)-wbSwFU6tY1c'
+BASE_URL = 'https://framex-dev.wadrid.net/api/video/'\
+           'Falcon%20Heavy%20Test%20Flight%20(Hosted%20Webcast)-wbSwFU6tY1c'
 
 def get_token():
+    """Token for Telegram Bot."""
     with open('token.json') as json_file:
         return json.load(json_file)['token']
 
 class BotHandler:
+    """Manages Telegram Bot interaction."""
 
     def __init__(self, token):
-        self.token = token
+        """Necessary variables for Bot interaction.
+
+        api_url is the specific url using the token
+        """
         self.api_url = "https://api.telegram.org/bot{}/".format(token)
 
     def get_updates(self, offset=0, timeout=30):
-        method = 'getUpdates'
+        """Bot refresh from API."""
         params = {'timeout': timeout, 'offset': offset}
-        resp = requests.get(self.api_url + method, params)
+        resp = requests.get(self.api_url + 'getUpdates', params)
         result_json = resp.json()['result']
         return result_json
 
     def send_message(self, chat_id, text, repkboard=False):
+        """Render text reply to chat."""
         params = {'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML'}
         if repkboard:
             keyboard_buttons = ['Yes', 'No', 'Exit']
             keyboard_buttons = [{'text': x} for x in keyboard_buttons]
-            ReplyKeyboardMarkup = {'keyboard': [keyboard_buttons],
+            rep_keyb_mkup = {'keyboard': [keyboard_buttons],
                                    'resize_keyboard': True}
-            params['reply_markup'] = json.dumps(ReplyKeyboardMarkup)
+            params['reply_markup'] = json.dumps(rep_keyb_mkup)
         else:
-            ReplyKeyboardRemove = {'remove_keyboard': True}
-            params['reply_markup'] = json.dumps(ReplyKeyboardRemove)
+            rep_keyb_rem = {'remove_keyboard': True}
+            params['reply_markup'] = json.dumps(rep_keyb_rem)
 
 
-        method = 'sendMessage'
-        resp = requests.post(self.api_url + method, params)
+        resp = requests.post(self.api_url + 'sendMessage', params)
         return resp
 
     def send_photo(self, chat_id, photo):
+        """Render image reply to chat."""
         params = {'chat_id': chat_id, 'photo': photo, 'parse_mode': 'HTML'}
-        method = 'sendPhoto'
-        resp = requests.post(self.api_url + method, params)
+        resp = requests.post(self.api_url + 'sendPhoto', params)
         return resp
 
 
-token = get_token() #Token of your bot
-magnito_bot = BotHandler(token) #Your bot's name
+magnito_bot = BotHandler(get_token()) #Your bot's name
 
 
 def main():
+    """Server process to manage bot interaction."""
     new_offset = 0
     rocket_finished = True
     print('hi, now launching...')
@@ -61,15 +66,14 @@ def main():
     while True:
         for update in magnito_bot.get_updates(new_offset):
             print(update)
-            update_id = update['update_id']
-            try:
-                message = update['message']
-            except:
-                message = update['edited_message']
+            update_id = update.get('update_id')
+            message = update.get('message')
+            if not message:
+                update.get('edited_message')
             chat_id = message['chat']['id']
 
             first_name = "unknown"
-            if 'first_name' in message:
+            if 'first_name' in message['chat']:
                 first_name = message['chat']['first_name']
             elif 'new_chat_member' in message:
                 first_name = message['new_chat_member']['username']
@@ -121,4 +125,4 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        exit()
+        sys.exit()
