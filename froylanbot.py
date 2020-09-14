@@ -115,9 +115,9 @@ def main():
 
             if not rocket_finished:
                 if user_response == 'yes':
-                    vid.remove('gte')
+                    vid.remove('gt')
                 elif user_response == 'no':
-                    vid.remove('lt')
+                    vid.remove('lte')
 
                 if user_response == 'exit':
                     rocket_finished = True

@@ -43,21 +43,21 @@ class Video:
 
         It is established as the midpoint of the bisect_endpoints list unless
         the two points in bisect_endpoints are contiguous. In that case the
-        the last element in bisect_enpoints is returned
+        the first element in bisect_enpoints is returned
         """
         if self.bisect_endpoints[1] - self.bisect_endpoints[0] <= 1:
-            # endpoint[1] is never returned until the very end
-            return self.bisect_endpoints[1]
+            # endpoint[0] is never returned until the very end
+            return self.bisect_endpoints[0]
         return round(statistics.mean(self.bisect_endpoints))
 
     def remove(self, answer):
         """Min or Max values are set depending on answer from user."""
-        if answer == 'gte':
+        if answer == 'gt':
             # Removes any value >= bisect_frame()
-            self.bisect_endpoints[1] = self.bisect_frame() - 1
-        elif answer == 'lt':
+            self.bisect_endpoints[1] = self.bisect_frame()
+        elif answer == 'lte':
             # Removes any value < bisect_frame()
-            self.bisect_endpoints[0] = self.bisect_frame()
+            self.bisect_endpoints[0] = self.bisect_frame() + 1
 
 
 def main():
@@ -75,9 +75,9 @@ def main():
         question = '{}  Did the rocket launch yet?   (Y/n)'.format(index)
         answer = input(question)
         if answer.lower() in ['', 'y']:
-            vid.remove('gte')
+            vid.remove('gt')
         elif answer.lower() == 'n':
-            vid.remove('lt')
+            vid.remove('lte')
         else:
             print('That is not a valid answer')
     print(vid.bisect_frame())
