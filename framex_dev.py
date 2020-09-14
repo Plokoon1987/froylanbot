@@ -28,7 +28,7 @@ class Video:
         return json.loads(response)
 
     def can_bisect(self):
-        """Veryfies that bisect_endpoints are bisectable.
+        """Veryfies that bisect_endpoints is bisectable.
 
         In other words, a midpoint can be obtained from it
         """
@@ -69,7 +69,6 @@ def main():
     vid = Video('https://framex-dev.wadrid.net/api/video/'\
                 'Falcon%20Heavy%20Test%20Flight%20(Hosted%20Webcast)-'\
                 'wbSwFU6tY1c')
-    counter = 0
 
     while vid.can_bisect():
         index = vid.bisect_frame()
@@ -77,10 +76,8 @@ def main():
         answer = input(question)
         if answer.lower() in ['', 'y']:
             vid.remove('gte')
-            counter += 1
         elif answer.lower() == 'n':
             vid.remove('lt')
-            counter += 1
         else:
             print('That is not a valid answer')
     print(vid.bisect_frame())

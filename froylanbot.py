@@ -58,7 +58,35 @@ magnito_bot = BotHandler(get_token()) #Your bot's name
 
 
 def main():
-    """Server process to manage bot interaction."""
+    """Server process to manage bot interaction.
+
+    All calls to telegram API are done with the BotHandler class
+    User interaction is taken care of in this function
+    """
+
+    def get_message(update):
+        """Message from update data."""
+        if update.get('message'):
+            return update.get('message')
+        return update.get('edited_message')
+
+    def get_first_name(message):
+        """First name from message data."""
+        first_name = 'unknown'
+        if 'first_name' in message['chat']:
+            first_name = message['chat']['first_name']
+        elif 'new_chat_member' in message:
+            first_name = message['new_chat_member']['username']
+        elif 'from' in message:
+            first_name = message['from']['first_name']
+        return first_name
+
+    def get_user_response(message):
+        """User response from message."""
+        if 'text' in message:
+            return message['text'].lower()
+        return 'New member'
+
     new_offset = 0
     rocket_finished = True
     print('hi, now launching...')
@@ -66,43 +94,33 @@ def main():
     while True:
         for update in magnito_bot.get_updates(new_offset):
             print(update)
+
+            # Getting Data from update
             update_id = update.get('update_id')
-            message = update.get('message')
-            if not message:
-                update.get('edited_message')
+            message = get_message(update)
             chat_id = message['chat']['id']
+            first_name = get_first_name(message)
+            user_response = get_user_response(message)
 
-            first_name = "unknown"
-            if 'first_name' in message['chat']:
-                first_name = message['chat']['first_name']
-            elif 'new_chat_member' in message:
-                first_name = message['new_chat_member']['username']
-            elif 'from' in message:
-                first_name = message['from']['first_name']
-
-            input_text = 'New member'
-            if 'text' in message:
-                input_text = message['text']
-
+            # Initiating objects if no game is already started.
+            # This is only carried out at the begining of each game
             if rocket_finished:
-                if input_text == '/rocket':
+                if user_response == '/rocket':
                     rocket_finished = False
                     vid = Video(BASE_URL)
                     output_text = 'Rocket bot initiated'
-                    magnito_bot.send_message(chat_id, output_text)
                 else:
                     output_text = 'How are you doing {}'.format(first_name)
-                    magnito_bot.send_message(chat_id, output_text)
+                magnito_bot.send_message(chat_id, output_text)
 
             if not rocket_finished:
-                if input_text.lower() == 'yes':
+                if user_response == 'yes':
                     vid.remove('gte')
-                elif input_text.lower() == 'no':
+                elif user_response == 'no':
                     vid.remove('lt')
 
-                if input_text.lower() == 'exit':
+                if user_response == 'exit':
                     rocket_finished = True
-                    output_photo = None
                     output_text = 'Exiting Rocket'
                     magnito_bot.send_message(chat_id, output_text)
                 elif vid.can_bisect():
